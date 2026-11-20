@@ -1129,6 +1129,10 @@ select {
   border-radius: 7px;
 }
 
+.lesson-main[hidden] {
+  display: none !important;
+}
+
 .lesson-meta {
   display: flex;
   justify-content: space-between;
@@ -3718,7 +3722,7 @@ body.focus-mode .hero-visual {
           </div>
           <div class="lesson-layout">
             <nav class="lesson-chapters" id="lessonChapters" aria-label="选择课程"></nav>
-            <article class="lesson-main">
+            <article class="lesson-main" id="lessonMain" hidden>
               <div class="lesson-meta">
                 <span id="lessonLabel">启程者 · 高等数学 · 第 1 讲</span>
               <span id="lessonStep">生活 → 白话 → 公式 → 思路 → 例题 → 自检</span>
@@ -6423,7 +6427,12 @@ function renderChapterToolbar() {
 function selectChapter(id) {
   const catalog = getChapterCatalog(state.subject);
   const selected = catalog.find((chapter) => chapter.id === id);
-  if (!selected || state.chapterId[state.subject] === id) return;
+  if (!selected) return;
+  if (state.chapterId[state.subject] === id) {
+    saveState();
+    renderLesson();
+    return;
+  }
   state.chapterId[state.subject] = id;
   state.dailyChapterId[state.subject] = id;
   state.dailyChapterStats[state.subject] = { answered: 0, correct: 0 };
@@ -6488,6 +6497,7 @@ const defaultState = {
   selectedRescue: "",
   subject: "calculus",
   lessonCursor: { calculus: 0, algebra: 0, probability: 0 },
+  lessonOpen: false,
   questionCursor: { calculus: 0, algebra: 0, probability: 0 },
   questionStats: {
     calculus: { answered: 0, correct: 0, streak: 0 },
@@ -6798,7 +6808,14 @@ function renderLesson() {
   `).join("");
   document.querySelectorAll("[data-chapter-id]").forEach((button) => {
     button.addEventListener("click", () => {
-      selectChapter(button.dataset.chapterId);
+      const chapterId = button.dataset.chapterId;
+      state.lessonOpen = true;
+      if (chapterId !== state.chapterId[state.subject]) {
+        selectChapter(chapterId);
+      } else {
+        saveState();
+        renderLesson();
+      }
     });
   });
   renderChapterToolbar();
@@ -6817,6 +6834,7 @@ function renderLesson() {
   $("#checkpointAnswer").hidden = true;
   $("#checkpointReveal").textContent = "先在心里答，再看答案";
   $("#lessonMistake").textContent = lesson.mistake;
+  $("#lessonMain").hidden = !state.lessonOpen;
 }
 
 function changeLesson(direction) {
@@ -7300,6 +7318,7 @@ $("#lessonToQuestion").addEventListener("click", () => {
 });
 
 $("#chapterSelect").addEventListener("change", (event) => {
+  state.lessonOpen = true;
   selectChapter(event.target.value);
 });
 
