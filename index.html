@@ -1368,6 +1368,10 @@ select {
   border-top: 1px dashed var(--line);
 }
 
+.advanced-catalog[hidden] {
+  display: none !important;
+}
+
 .advanced-catalog-head {
   display: flex;
   flex-wrap: wrap;
@@ -3635,7 +3639,6 @@ body.focus-mode .hero-visual {
             </div>
             <span class="tag tag-muted">按薄弱章节测算</span>
           </div>
-          <p class="commander-intro">不看立绘，只看盘主真正掌握到哪里。系统会扫描各章正确率，找出薄弱节点，再给出今天的战力提升路线。</p>
           <div class="commander-layout">
             <div class="power-summary">
               <span>当前战力</span>
@@ -3742,11 +3745,10 @@ body.focus-mode .hero-visual {
           </div>
           <div class="practice-modes" role="tablist" aria-label="选择练习模式">
             <button class="practice-mode active" type="button" role="tab" aria-selected="true" data-practice-mode="formal">每日 10 题</button>
-            <button class="practice-mode" type="button" role="tab" aria-selected="false" data-practice-mode="advanced">强化题</button>
             <button class="practice-mode" type="button" role="tab" aria-selected="false" data-practice-mode="wrong">错题练习</button>
             <button class="practice-mode" type="button" role="tab" aria-selected="false" data-practice-mode="extra">全部额外题</button>
           </div>
-          <div class="advanced-catalog" id="advancedCatalog">
+          <div class="advanced-catalog" id="advancedCatalog" hidden>
             <div class="advanced-catalog-head">
               <div>
                 <strong>强化题库 · 加强版</strong>
@@ -6522,6 +6524,7 @@ function loadState() {
       merged.touchDate = getTodayKey();
     }
     merged.extraPractice = { ...fresh.extraPractice, ...(saved?.extraPractice || {}) };
+    if (merged.practiceMode === "advanced") merged.practiceMode = "formal";
     for (const subject of Object.keys(fresh.chapterId)) {
       const validIds = subject === "calculus"
         ? chapterData.calculus.map((chapter) => chapter.id)
@@ -6850,7 +6853,7 @@ function renderQuestion() {
   $("#questionPrompt").textContent = activeQuestion.prompt;
   $("#questionApproach").textContent = getQuestionSolution(activeQuestion).idea;
   renderQuestionLecture();
-  $("#questionLecture").open = mode === "advanced" || mode === "extra";
+  $("#questionLecture").open = false;
   $("#questionHint").textContent = "需要外援时，点“先看提示”，会把题目拆成已知、所求和第一步。";
   $("#revealHint").textContent = "先看提示";
   $("#revealHint").disabled = false;
@@ -6975,6 +6978,7 @@ function answerQuestion(selectedIndex) {
     <p class="solution-explanation"><strong>原理解释：</strong>${activeQuestion.explanation}</p>
   `;
   $("#nextQuestion").disabled = false;
+  $("#questionLecture").open = true;
   renderQuestionStats();
   renderRole();
   renderRewards();
